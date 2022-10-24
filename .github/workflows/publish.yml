@@ -38,8 +38,4 @@ jobs:
         file: ./Dockerfile
         target: server
         push: true
-        tags: |
-          $REGISTRY/$OWNER/$IMAGE_NAME:$(date +%s)
-        build-args: |
-          ENVIRONMENT=production
 
