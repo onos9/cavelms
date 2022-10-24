@@ -1,0 +1,25 @@
+
+type Setting {
+    id: ID!
+    userId: ID!
+    type: String
+    roles: [ID!]
+}
+
+input NewSetting {
+  type: String
+}
+
+input UpdateSetting {
+  name: String
+  permissions: [String]
+}
+
+extend type Mutation {
+  createSetting(input: NewSetting!): Video!
+}
+
+extend type Query {
+  setting(id: ID!): Role!
+  settings(limit: Int = 25, offset: Int = 0): [Setting!]!
+}

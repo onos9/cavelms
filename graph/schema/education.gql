@@ -1,0 +1,27 @@
+type Education {
+  id: ID!
+  userId: ID!
+  degree: String!
+  institution: String!
+  graduationYear: String!
+  createdAt: Time
+  updatedAt: Time
+  deletedAt: Time
+}
+
+input NewEducation {
+  userId: ID!
+  degree: String!
+  institution: String!
+  graduationYear: String!
+}
+
+extend type Mutation {
+  createEducation(input: NewEducation!): Education!
+  updateEducation(input: Any): Education!
+}
+
+extend type Query {
+  education(id: ID!): Education!
+  educations(userId: ID): [Education!]!
+}

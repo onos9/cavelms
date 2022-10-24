@@ -1,0 +1,24 @@
+type Mail {
+  fromAddr: String!
+  toAddrs: [String!]
+  subject: String!
+  body: String!
+}
+
+input newMail {
+  FromAddr: String!
+  toAddrs: [String!]
+  subject: String!
+  body: String!
+  data: Any
+}
+
+extend type Mutation {
+  send(input: newMail): Mail
+  deleteMail(id: ID!): Mail
+}
+
+extend type Query {
+  mail(id: ID!): Mail
+  mails: [Mail]
+}

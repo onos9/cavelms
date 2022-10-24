@@ -1,0 +1,10 @@
+type Question {
+  id: ID!
+  questionType: String
+  quizId: String
+  question: String
+  description: String
+  correctAnswerID: String
+  quiz: Quiz
+  answer: AnswerOption
+}

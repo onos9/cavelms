@@ -1,0 +1,32 @@
+type Auth {
+  id: ID!
+  role: String!
+  email: String
+  token: String!
+  expiredAt: String!
+  permissions: [String]
+  username: String
+  progress: Int!
+}
+input NewAccount{
+    firstName: String!
+    lastName: String!
+    fullName: String!
+    email: String!
+    password: String!
+    role: String!
+}
+
+extend type Query {
+  refresh: User
+}
+
+extend type Mutation {
+  signIn(email: String!, password: String!): User
+  signUp(fullName: String!, email: String!, password: String!, role: String!): User
+  logOut(email: String!, password: String!): User
+  forgetPassword(email: String!): User
+  resetPassword(email: String!, password: String!): User
+  changePassword(email: String!, token: String!): User
+  verifyEmail(id: ID!, code: String!): User
+}

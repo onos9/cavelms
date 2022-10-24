@@ -1,0 +1,34 @@
+type Video {
+  id: ID!
+  title: String!
+  description: String!
+  url: String!
+  courseId: ID!
+  thumbnail: Thumbnail
+  related(limit: Int = 10, offset: Int = 0): [Video!]!
+  createdAt: Time
+  updatedAt: Time
+  deletedAt: Time
+}
+
+type Thumbnail {
+  id: ID!
+  videoId: ID!
+  url: String!
+}
+
+input NewVideo {
+  title: String!
+  description: String!
+  courseId: ID!
+  url: String!
+}
+
+extend type Mutation {
+  createVideo(input: NewVideo!): Video!
+}
+
+extend type Query {
+  video(id: ID!): Video!
+  videos(limit: Int = 25, offset: Int = 0): [Video!]!
+}

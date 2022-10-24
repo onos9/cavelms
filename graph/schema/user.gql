@@ -1,0 +1,88 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+type User {
+  id: String!
+  firstName: String!
+  lastName: String!
+  middleName: String!
+  fullName: String!
+  email: String!
+  phone: String!
+  avatarUrl: String!
+  dob: String!
+  gender: String!
+  address: String!
+  city: String!
+  state: String!
+  country: String!
+  zip: String!
+  nationality: String!
+  profession: String!
+  passwordSalt: String!
+  passwordHash: String!
+  role: String!
+  permissions: [String]
+  username: String!
+  isVerified: Boolean!
+  about: String!
+  wallet: Float!
+  timeZone: String!
+  progress: Int!
+  token: String!
+  tokenExpiredAt: Int64!
+
+# School Data
+  matricNumber: String!
+  platform: String!
+  program: String!
+  regNumber: String!
+  files: [ID!]
+  courses: [ID!]
+
+# Spiritual Background
+  salvationBrief: String!
+  godsWorkings: [String!]
+  reason: String!
+  churchName: String!
+  churchAddress: String!
+  pastorName: String!
+  pastorEmail: String!
+  pastorPhone: String!
+  churchInvolved: String!
+
+# Health Information
+  healthConditions: [String!]
+  healthIssueDescription: String!
+
+  scholarship: Boolean
+  scholarshipReason: String!
+
+  qualifications: [ID!]
+  referees: [ID!]
+
+  createdAt: Time
+  updatedAt: Time
+  deletedAt: Time
+  confirmedAt: Time
+  confirmationMailSentAt: Time
+}
+
+input NewUser {
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
+}
+
+extend type Query {
+  users: [User] @requireAuth()
+  user(id: ID!): User @requireAuth()
+}
+
+extend type Mutation {
+  createUser(input: NewUser): User @requireAuth()
+  updateUser(data: Any): User @requireAuth()
+  deleteUser(id: ID): User @requireAuth()
+  deleteManyUsers(id: [ID!]): User @requireAuth()
+}

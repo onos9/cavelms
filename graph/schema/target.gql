@@ -1,0 +1,21 @@
+type Target {
+  id: ID!
+  role: Role
+  title: String
+  description: String
+  completionInstructions: String
+  resourceURL: String
+  targetGroupID: String
+  sortIndex: Int
+  sessionAt: Time
+  linkToComplete: String
+  resubmittable: Boolean
+  checkList: [String]
+  reviewChecklist: [String]
+  targetGroup: TargetGroup
+  targetVersions: TargetVersionList
+  Quizzes: [Quiz]
+}
+
+type TargetGroup {id: ID!}
+type TargetVersionList {id: ID!}

@@ -1,0 +1,27 @@
+type Quiz {
+  id: ID!
+  courseId: ID!
+  title: String!
+  description: String!
+  quizType: String
+  targetId: String
+  questions: [Question]
+  createdAt: Time
+  updatedAt: Time
+  deletedAt: Time
+}
+
+input NewQuiz {
+  courseId: ID!
+  title: String!
+  description: String!
+}
+
+extend type Mutation {
+  createQuiz(input: NewQuiz!): Quiz!
+}
+
+extend type Query {
+  quiz(id: ID!): Quiz!
+  quizzes(limit: Int = 25, offset: Int = 0): [Quiz!]!
+}

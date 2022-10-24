@@ -1,0 +1,37 @@
+type File {
+  id: ID!
+  userId: ID!
+  filename: String!
+  title: String!
+  url: String!
+  path: String!
+  size: Int64!
+  contentType: String!
+  category: String!
+  courseId: ID!
+  createdAt: Time
+  updatedAt: Time
+  deletedAt: Time
+}
+
+input UploadFile {
+  file: Upload!
+}
+
+input NewFile {
+  userId: ID!
+  file: Upload!
+  title: String!
+  category:String!
+}
+
+extend type Mutation {
+  createFile(input: NewFile!): File!
+  updateFile(input: Any): File!
+  uploadFiles(input: [UploadFile!]!): [File!]!
+}
+
+extend type Query {
+  file(id: ID!): File!
+  files: [File!]!
+}

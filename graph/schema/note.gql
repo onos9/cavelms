@@ -1,0 +1,26 @@
+type Note {
+  id: ID!
+  title: String!
+  description: String!
+  text: String!
+  courseId: ID!
+  createdAt: Time
+  updatedAt: Time
+  deletedAt: Time
+}
+
+input NewNote {
+  title: String!
+  description: String!
+  courseId: ID!
+  url: String!
+}
+
+extend type Mutation {
+  createNote(input: NewNote!): Note!
+}
+
+extend type Query {
+  note(id: ID!): Note!
+  notes(limit: Int = 25, offset: Int = 0): [Note!]!
+}

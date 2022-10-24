@@ -1,0 +1,9 @@
+type EvaluationCriteria {
+  id: ID!
+  name: String
+  courseID: String
+  maxGrade: Int
+  passGrade: Int
+  gradeLabels: [String]
+  course: Course
+}

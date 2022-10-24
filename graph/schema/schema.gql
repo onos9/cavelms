@@ -1,0 +1,7 @@
+scalar Time
+scalar Any
+scalar Int64
+scalar Upload
+
+directive @requireAuth(token: String) on FIELD_DEFINITION
+

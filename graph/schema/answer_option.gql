@@ -1,0 +1,7 @@
+type AnswerOption {
+  id: ID!
+  questionId: String
+  value: String
+  hint: String
+  question: Question
+}

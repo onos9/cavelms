@@ -1,0 +1,82 @@
+type Course {
+  id: ID!
+  userId: ID!
+  author: ID!
+  title: String!
+  code: String!
+  courseType: String!
+  description: String
+  program: String!
+  semester: String!
+  year: String!
+  lecturer: ID!
+  users: [ID!]
+  activities: [ID!]
+  timeline: ID!
+  grades: ID!
+  assignments: [ID!]
+  videos: [ID!]
+  notes: [ID!]
+  document: [ID!]
+  status: String
+  progress: Int!
+
+  createdAt: Time
+  updatedAt: Time
+  deletedAt: Time
+  dueDate: Time
+}
+
+type Activity {
+  id: ID!
+  courseId: ID!
+}
+
+type Timeline {
+  id: ID!
+  courseId: ID!
+}
+
+type Grade {
+  id: ID!
+  courseId: ID!
+}
+
+input NewCourse {
+  id: ID!
+  title: String!
+  code: String!
+  type: String!
+  program: String!
+  semester: String!
+  year: String!
+}
+
+extend type Query {
+  courses: [Course] @requireAuth()
+  course: Course @requireAuth()
+}
+
+extend type Mutation {
+  createCourse(input: NewCourse): User @requireAuth()
+  updateCourse(data: Any): User @requireAuth()
+  deleteCourse(id: ID): User @requireAuth()
+  deleteManyCourse(id: [ID!]): User @requireAuth()
+}
+
+# - Course Title
+# - Course code
+# - Course Description
+# - Course Category (Diploma or PGDT; First semester or second semester; For diploma they would have year one or year 2)
+# - Course Lecturer Details ( Name, short description, email)
+# - Students should be able to register for the courses they take themselves
+# - Lecture Videos
+# - Lecture Note
+# - Assignment (PDF & Essay that can be typed directly in a text box)
+# - Examination (Objective & Essay) The examination would have number of attempts and time duration
+# - Students should be able to send the lecturer messages regarding questions and grey areas as they watch the videos. And the lecturer should be able to give them answers.
+# - The examination and Assignment would have a timeline
+# - Students should be able to see their results after taking their exams or assignment. They should be able to also see their results whenever they login.
+# - The admin should be able to view the grades of students in one page.
+# - after watching the lecture video a grade should be assigned to the student.
+# - Grading is as follows ( Exams 40%, Assignment 20%, Online meeting attendance 20%, lecture video watching attendance 20%)
