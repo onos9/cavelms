@@ -36,9 +36,10 @@ jobs:
       with:
         context: .
         file: ./Dockerfile
-        target: final
+        target: server
         push: true
         tags: |
           $REGISTRY/$OWNER/$IMAGE_NAME:$(date +%s)
         build-args: |
           ENVIRONMENT=production
+
