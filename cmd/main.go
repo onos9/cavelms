@@ -27,7 +27,7 @@ func main() {
 	s.Use(gin.Recovery()) // Default Log Middleware
 	s.Use(gin.Logger())   // Default   // Recovery Middleware
 	s.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8080","http://localhost:8888"},
+		AllowOrigins:     []string{"http://localhost:8080","http://localhost:8888","https://portal.adullam.ng"},
 		AllowMethods:     []string{"GET", "PATCH", "POST", "HEAD", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Range", "Authorization"},
 		ExposeHeaders:    []string{"Content-Range", "X-Total-Count"},
