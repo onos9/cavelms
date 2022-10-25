@@ -28,3 +28,4 @@ cmd/.env
 index.html
 web/*
 web/
+cmd/__debug_bin

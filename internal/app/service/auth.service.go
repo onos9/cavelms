@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -83,7 +84,7 @@ func (a *auth) SignUp(ctx context.Context, fullName, email, password, role strin
 
 	err = a.Mail.Send("signup", mail)
 	if err != nil {
-		return nil, err
+		log.Panicln(err)
 	}
 	return user, nil
 }
