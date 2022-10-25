@@ -1,0 +1,24 @@
+version: '3.8'
+
+networks:
+  proxy_net:
+    name: nginx-proxy-manager_default
+  db_net:
+    name: databases_db_net
+
+services:
+
+  cavelms:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: server
+    entrypoint: ./cavelms -s api
+    ports:
+      - 8080
+    env_file:
+      - ./.prod.env
+    networks:
+      - proxy_net
+      - db_net

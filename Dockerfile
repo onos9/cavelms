@@ -33,6 +33,5 @@ RUN cd cmd && go build -gcflags "all=-N -l" -o ../cavelms
 FROM scratch AS server
 
 COPY --from=builder /src/cavelms ./cavelms
-COPY --from=builder /src/.env ./.env
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 ENTRYPOINT ["./cavelms"]
