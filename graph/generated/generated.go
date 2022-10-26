@@ -166,7 +166,7 @@ type ComplexityRoot struct {
 		DeleteRole       func(childComplexity int, id string) int
 		DeleteUser       func(childComplexity int, id *string) int
 		ForgetPassword   func(childComplexity int, email string) int
-		LogOut           func(childComplexity int, email string, password string) int
+		LogOut           func(childComplexity int) int
 		ResetPassword    func(childComplexity int, email string, password string) int
 		Send             func(childComplexity int, input *model.NewMail) int
 		SignIn           func(childComplexity int, email string, password string) int
@@ -379,7 +379,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	SignIn(ctx context.Context, email string, password string) (*model.User, error)
 	SignUp(ctx context.Context, fullName string, email string, password string, role string) (*model.User, error)
-	LogOut(ctx context.Context, email string, password string) (*model.User, error)
+	LogOut(ctx context.Context) (*model.User, error)
 	ForgetPassword(ctx context.Context, email string) (*model.User, error)
 	ResetPassword(ctx context.Context, email string, password string) (*model.User, error)
 	ChangePassword(ctx context.Context, email string, token string) (*model.User, error)
@@ -1189,12 +1189,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_logOut_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.LogOut(childComplexity, args["email"].(string), args["password"].(string)), true
+		return e.complexity.Mutation.LogOut(childComplexity), true
 
 	case "Mutation.resetPassword":
 		if e.complexity.Mutation.ResetPassword == nil {
@@ -2589,13 +2584,13 @@ var sources = []*ast.Source{
   username: String
   progress: Int!
 }
-input NewAccount{
-    firstName: String!
-    lastName: String!
-    fullName: String!
-    email: String!
-    password: String!
-    role: String!
+input NewAccount {
+  firstName: String!
+  lastName: String!
+  fullName: String!
+  email: String!
+  password: String!
+  role: String!
 }
 
 extend type Query {
@@ -2604,8 +2599,13 @@ extend type Query {
 
 extend type Mutation {
   signIn(email: String!, password: String!): User
-  signUp(fullName: String!, email: String!, password: String!, role: String!): User
-  logOut(email: String!, password: String!): User
+  signUp(
+    fullName: String!
+    email: String!
+    password: String!
+    role: String!
+  ): User
+  logOut: User
   forgetPassword(email: String!): User
   resetPassword(email: String!, password: String!): User
   changePassword(email: String!, token: String!): User
@@ -3390,30 +3390,6 @@ func (ec *executionContext) field_Mutation_forgetPassword_args(ctx context.Conte
 		}
 	}
 	args["email"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_logOut_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["email"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["email"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["password"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["password"] = arg1
 	return args, nil
 }
 
@@ -7576,7 +7552,7 @@ func (ec *executionContext) _Mutation_logOut(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().LogOut(rctx, fc.Args["email"].(string), fc.Args["password"].(string))
+		return ec.resolvers.Mutation().LogOut(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7711,17 +7687,6 @@ func (ec *executionContext) fieldContext_Mutation_logOut(ctx context.Context, fi
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_logOut_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
 	}
 	return fc, nil
 }

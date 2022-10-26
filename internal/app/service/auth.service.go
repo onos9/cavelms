@@ -19,7 +19,7 @@ import (
 type authService interface {
 	SignUp(ctx context.Context, fullName, email, password, role string) (*model.User, error)
 	SignIn(ctx context.Context, email, password string) (*model.User, error)
-	SignOut(ctx context.Context, userID string) error
+	SignOut(ctx context.Context) error
 	RefreshToken(ctx context.Context) (*model.User, error)
 	VerifyEmail(ctx context.Context, id, code string) (*model.User, error)
 	ForgetPassword(email string) (*model.User, error)
@@ -114,7 +114,7 @@ func (a *auth) SignIn(ctx context.Context, email, password string) (*model.User,
 	return user, nil
 }
 
-func (a *auth) SignOut(ctx context.Context, userID string) error {
+func (a *auth) SignOut(ctx context.Context) error {
 	c := ctx.Value(apiCtx("apiCtx")).(*gin.Context)
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "token",

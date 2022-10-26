@@ -8,13 +8,13 @@ type Auth {
   username: String
   progress: Int!
 }
-input NewAccount{
-    firstName: String!
-    lastName: String!
-    fullName: String!
-    email: String!
-    password: String!
-    role: String!
+input NewAccount {
+  firstName: String!
+  lastName: String!
+  fullName: String!
+  email: String!
+  password: String!
+  role: String!
 }
 
 extend type Query {
@@ -23,8 +23,13 @@ extend type Query {
 
 extend type Mutation {
   signIn(email: String!, password: String!): User
-  signUp(fullName: String!, email: String!, password: String!, role: String!): User
-  logOut(email: String!, password: String!): User
+  signUp(
+    fullName: String!
+    email: String!
+    password: String!
+    role: String!
+  ): User
+  logOut: User
   forgetPassword(email: String!): User
   resetPassword(email: String!, password: String!): User
   changePassword(email: String!, token: String!): User

@@ -32,8 +32,13 @@ func (r *mutationResolver) SignUp(ctx context.Context, fullName string, email st
 }
 
 // LogOut is the resolver for the logOut field.
-func (r *mutationResolver) LogOut(ctx context.Context, email string, password string) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: LogOut - logOut"))
+func (r *mutationResolver) LogOut(ctx context.Context) (*model.User, error) {
+	err := r.Service.SignOut(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.User{}, nil
 }
 
 // ForgetPassword is the resolver for the forgetPassword field.
