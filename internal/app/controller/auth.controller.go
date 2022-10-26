@@ -38,7 +38,7 @@ func (r *mutationResolver) LogOut(ctx context.Context) (*model.User, error) {
 		return nil, err
 	}
 
-	return &model.User{}, nil
+	return &model.User{LoggedIn: false}, nil
 }
 
 // ForgetPassword is the resolver for the forgetPassword field.

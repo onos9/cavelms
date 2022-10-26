@@ -330,6 +330,7 @@ type ComplexityRoot struct {
 		ID                     func(childComplexity int) int
 		IsVerified             func(childComplexity int) int
 		LastName               func(childComplexity int) int
+		LoggedIn               func(childComplexity int) int
 		MatricNumber           func(childComplexity int) int
 		MiddleName             func(childComplexity int) int
 		Nationality            func(childComplexity int) int
@@ -2199,6 +2200,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.LastName(childComplexity), true
 
+	case "User.loggedIn":
+		if e.complexity.User.LoggedIn == nil {
+			break
+		}
+
+		return e.complexity.User.LoggedIn(childComplexity), true
+
 	case "User.matricNumber":
 		if e.complexity.User.MatricNumber == nil {
 			break
@@ -3001,6 +3009,7 @@ type User {
   progress: Int!
   token: String!
   tokenExpiredAt: Int64!
+  loggedIn: Boolean!
 
 # School Data
   matricNumber: String!
@@ -7304,6 +7313,8 @@ func (ec *executionContext) fieldContext_Mutation_signIn(ctx context.Context, fi
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -7468,6 +7479,8 @@ func (ec *executionContext) fieldContext_Mutation_signUp(ctx context.Context, fi
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -7632,6 +7645,8 @@ func (ec *executionContext) fieldContext_Mutation_logOut(ctx context.Context, fi
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -7785,6 +7800,8 @@ func (ec *executionContext) fieldContext_Mutation_forgetPassword(ctx context.Con
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -7949,6 +7966,8 @@ func (ec *executionContext) fieldContext_Mutation_resetPassword(ctx context.Cont
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -8113,6 +8132,8 @@ func (ec *executionContext) fieldContext_Mutation_changePassword(ctx context.Con
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -8277,6 +8298,8 @@ func (ec *executionContext) fieldContext_Mutation_verifyEmail(ctx context.Contex
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -8461,6 +8484,8 @@ func (ec *executionContext) fieldContext_Mutation_createCourse(ctx context.Conte
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -8651,6 +8676,8 @@ func (ec *executionContext) fieldContext_Mutation_updateCourse(ctx context.Conte
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -8835,6 +8862,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteCourse(ctx context.Conte
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -9019,6 +9048,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteManyCourse(ctx context.C
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -10293,6 +10324,8 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -10483,6 +10516,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -10667,6 +10702,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -10851,6 +10888,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteManyUsers(ctx context.Co
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -11435,6 +11474,8 @@ func (ec *executionContext) fieldContext_Query_refresh(ctx context.Context, fiel
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -12931,6 +12972,8 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -13104,6 +13147,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_token(ctx, field)
 			case "tokenExpiredAt":
 				return ec.fieldContext_User_tokenExpiredAt(ctx, field)
+			case "loggedIn":
+				return ec.fieldContext_User_loggedIn(ctx, field)
 			case "matricNumber":
 				return ec.fieldContext_User_matricNumber(ctx, field)
 			case "platform":
@@ -17174,6 +17219,50 @@ func (ec *executionContext) fieldContext_User_tokenExpiredAt(ctx context.Context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_loggedIn(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_loggedIn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LoggedIn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_loggedIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -23408,6 +23497,13 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		case "tokenExpiredAt":
 
 			out.Values[i] = ec._User_tokenExpiredAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "loggedIn":
+
+			out.Values[i] = ec._User_loggedIn(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

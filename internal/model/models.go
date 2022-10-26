@@ -322,6 +322,7 @@ type User struct {
 	Progress               int        `json:"progress" bson:"progress,omitempty"`
 	Token                  string     `json:"token" bson:"token,omitempty"`
 	TokenExpiredAt         int64      `json:"tokenExpiredAt" bson:"tokenExpiredAt,omitempty"`
+	LoggedIn               bool       `json:"loggedIn" bson:"loggedIn,omitempty"`
 	MatricNumber           string     `json:"matricNumber" bson:"matricNumber,omitempty"`
 	Platform               string     `json:"platform" bson:"platform,omitempty"`
 	Program                string     `json:"program" bson:"program,omitempty"`
