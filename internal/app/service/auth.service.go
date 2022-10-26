@@ -61,7 +61,7 @@ func (a *auth) SignUp(ctx context.Context, fullName, email, password, role strin
 	}
 
 	code := utils.GenerateVerificationCode()
-	err = a.RDBS.Set(user.ID, strings.TrimSpace(code), 60)
+	err = a.RDBS.Set(user.ID, strings.TrimSpace(code), 600)
 	if err != nil {
 		return nil, err
 	}
@@ -139,20 +139,25 @@ func (a *auth) RefreshToken(ctx context.Context) (*model.User, error) {
 		return nil, err
 	}
 
-	user := &model.User{
+	user := model.User{
 		ID:    claims["userId"].(string),
 		Email: claims["email"].(string),
 		Role:  claims["role"].(string),
 	}
 
-	t, err := jwt.GenerateToken(*user, false)
+	err = a.DB.FetchByID(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	t, err := jwt.GenerateToken(user, false)
 	if err != nil {
 		return nil, err
 	}
 
 	user.Token = t.AccessToken
 	user.TokenExpiredAt = t.AccessExpiresAt / int64(time.Second)
-	return user, nil
+	return &user, nil
 }
 
 func (a *auth) VerifyEmail(ctx context.Context, id, code string) (*model.User, error) {
