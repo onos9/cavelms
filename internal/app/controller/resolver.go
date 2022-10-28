@@ -24,10 +24,9 @@ func NewController(r *gin.Engine, s service.Service) *http.Server {
 	re := &Resolver{Service: s}
 	gqlcfg := generated.Config{Resolvers: re}
 
-	// r.Use()
 	r.GET("/", re.playgroundHanler())
 	r.POST("/query", s.ApiMiddleware, re.queryHanler(gqlcfg))
-	r.POST("/upload", s.AuthMidleware, re.uploadHandler)
+	r.POST("/download", s.AuthMidleware, re.downloadHandler)
 
 	config := config.GetConfig()
 	port := fmt.Sprintf(":%s", config.Port)
@@ -54,6 +53,6 @@ func (r *Resolver) playgroundHanler() gin.HandlerFunc {
 	}
 }
 
-func (r *Resolver) uploadHandler(c *gin.Context) {
+func (r *Resolver) downloadHandler(c *gin.Context) {
 
 }
