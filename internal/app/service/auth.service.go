@@ -10,6 +10,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/cavelms/internal/app/repository"
 	"github.com/cavelms/internal/model"
+	"github.com/cavelms/pkg/mail"
 	"github.com/cavelms/pkg/utils"
 	"github.com/gin-gonic/gin"
 	jwt "github.com/golang-jwt/jwt/v4"
@@ -75,8 +76,8 @@ func (a *auth) SignUp(ctx context.Context, fullName, email, password, role strin
 		return nil, err
 	}
 
-	mail := model.Mail{
-		To:      []string{email},
+	mail := mail.Mailer {
+		ToAddrs:      []string{email},
 		Subject: "Account Activation",
 		Body:    body,
 	}

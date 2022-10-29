@@ -11,7 +11,7 @@ import (
 )
 
 // Send is the resolver for the send field.
-func (r *mutationResolver) Send(ctx context.Context, tpl string, input *model.NewMail) (*model.Mail, error) {
+func (r *mutationResolver) Send(ctx context.Context, tpl string, input *model.NewMail) (interface{}, error) {
 	m, err := r.Service.SendMail(tpl, input)
 	if err != nil {
 		return nil, err

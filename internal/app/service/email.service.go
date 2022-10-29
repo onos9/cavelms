@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/cavelms/internal/app/repository"
 	"github.com/cavelms/internal/model"
+	"github.com/cavelms/pkg/mail"
 	"github.com/cavelms/pkg/utils"
 )
 
@@ -11,33 +12,49 @@ type mailService interface {
 	DeleteMail(*model.Mail) error
 }
 
-type mail struct {
+type mailer struct {
 	*repository.Repository
 }
 
 func newMailService(repo *repository.Repository) mailService {
-	return &mail{
+	return &mailer{
 		Repository: repo,
 	}
 }
 
-func (m *mail) SendMail(tpl string, data *model.NewMail) (*model.Mail, error) {
+func (m *mailer) SendMail(tpl string, data *model.NewMail) (*model.Mail, error) {
 	body, err := utils.ParseTemplate(tpl, data.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	mail := model.Mail{
-		To:      data.To,
+	msg := mail.Mailer{
+		ToAddrs: data.To,
 		Subject: data.Subject,
 		Body:    body,
 	}
 
-	err = m.Mail.Send(mail)
+	if data.Attach {
+		fs := mail.Template
+		file, err := fs.Open("template/reference_form.doc")
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+		fileInfo, _ := file.Stat()
+		size := fileInfo.Size()
+
+		buffer := make([]byte, size)
+		file.Read(buffer)
+		msg.Attachment = buffer
+		msg.Filename = fileInfo.Name()
+	}
+
+	err = m.Mail.Send(msg)
 	if err != nil {
 		return nil, err
 	}
 
 	return nil, nil
 }
-func (m *mail) DeleteMail(*model.Mail) error { return nil }
+func (m *mailer) DeleteMail(*model.Mail) error { return nil }

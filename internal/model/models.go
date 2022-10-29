@@ -106,6 +106,7 @@ type Mail struct {
 	To      []string `json:"to" bson:"to,omitempty"`
 	Subject string   `json:"subject" bson:"subject,omitempty"`
 	Body    string   `json:"body" bson:"body,omitempty"`
+	Attach  bool     `json:"attach" bson:"attach,omitempty"`
 }
 
 type NewAccount struct {
@@ -144,6 +145,7 @@ type NewFile struct {
 type NewMail struct {
 	To      []string    `json:"to" bson:"to,omitempty"`
 	Subject string      `json:"subject" bson:"subject,omitempty"`
+	Attach  bool        `json:"attach" bson:"attach,omitempty"`
 	Body    interface{} `json:"body" bson:"body,omitempty"`
 }
 

@@ -141,6 +141,7 @@ type ComplexityRoot struct {
 	}
 
 	Mail struct {
+		Attach  func(childComplexity int) int
 		Body    func(childComplexity int) int
 		Subject func(childComplexity int) int
 		To      func(childComplexity int) int
@@ -393,7 +394,7 @@ type MutationResolver interface {
 	CreateFile(ctx context.Context, input model.NewFile) (*model.File, error)
 	UpdateFile(ctx context.Context, input interface{}) (*model.File, error)
 	UploadFiles(ctx context.Context, input []*model.UploadFile) ([]*model.File, error)
-	Send(ctx context.Context, tpl string, input *model.NewMail) (*model.Mail, error)
+	Send(ctx context.Context, tpl string, input *model.NewMail) (interface{}, error)
 	DeleteMail(ctx context.Context, id string) (*model.Mail, error)
 	CreateNote(ctx context.Context, input model.NewNote) (*model.Note, error)
 	CreateQuiz(ctx context.Context, input model.NewQuiz) (*model.Quiz, error)
@@ -939,6 +940,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Grade.ID(childComplexity), true
+
+	case "Mail.attach":
+		if e.complexity.Mail.Attach == nil {
+			break
+		}
+
+		return e.complexity.Mail.Attach(childComplexity), true
 
 	case "Mail.body":
 		if e.complexity.Mail.Body == nil {
@@ -2775,16 +2783,18 @@ extend type Query {
   to: [String!]
   subject: String!
   body: String!
+  attach: Boolean!
 }
 
 input NewMail {
   to: [String!]
   subject: String!
+  attach: Boolean!
   body: Any!
 }
 
 extend type Mutation {
-  send(tpl: String!, input: NewMail): Mail
+  send(tpl: String!, input: NewMail): Any
   deleteMail(id: ID!): Mail
 }
 
@@ -7173,6 +7183,50 @@ func (ec *executionContext) fieldContext_Mail_body(ctx context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _Mail_attach(ctx context.Context, field graphql.CollectedField, obj *model.Mail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mail_attach(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Attach, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mail_attach(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_signIn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_signIn(ctx, field)
 	if err != nil {
@@ -9504,9 +9558,9 @@ func (ec *executionContext) _Mutation_send(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Mail)
+	res := resTmp.(interface{})
 	fc.Result = res
-	return ec.marshalOMail2ᚖgithubᚗcomᚋcavelmsᚋinternalᚋmodelᚐMail(ctx, field.Selections, res)
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_send(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9516,15 +9570,7 @@ func (ec *executionContext) fieldContext_Mutation_send(ctx context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "to":
-				return ec.fieldContext_Mail_to(ctx, field)
-			case "subject":
-				return ec.fieldContext_Mail_subject(ctx, field)
-			case "body":
-				return ec.fieldContext_Mail_body(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Mail", field.Name)
+			return nil, errors.New("field of type Any does not have child fields")
 		},
 	}
 	defer func() {
@@ -9583,6 +9629,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteMail(ctx context.Context
 				return ec.fieldContext_Mail_subject(ctx, field)
 			case "body":
 				return ec.fieldContext_Mail_body(ctx, field)
+			case "attach":
+				return ec.fieldContext_Mail_attach(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Mail", field.Name)
 		},
@@ -12054,6 +12102,8 @@ func (ec *executionContext) fieldContext_Query_mail(ctx context.Context, field g
 				return ec.fieldContext_Mail_subject(ctx, field)
 			case "body":
 				return ec.fieldContext_Mail_body(ctx, field)
+			case "attach":
+				return ec.fieldContext_Mail_attach(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Mail", field.Name)
 		},
@@ -12114,6 +12164,8 @@ func (ec *executionContext) fieldContext_Query_mails(ctx context.Context, field 
 				return ec.fieldContext_Mail_subject(ctx, field)
 			case "body":
 				return ec.fieldContext_Mail_body(ctx, field)
+			case "attach":
+				return ec.fieldContext_Mail_attach(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Mail", field.Name)
 		},
@@ -20819,7 +20871,7 @@ func (ec *executionContext) unmarshalInputNewMail(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"to", "subject", "body"}
+	fieldsInOrder := [...]string{"to", "subject", "attach", "body"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20839,6 +20891,14 @@ func (ec *executionContext) unmarshalInputNewMail(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subject"))
 			it.Subject, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "attach":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attach"))
+			it.Attach, err = ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -21841,6 +21901,13 @@ func (ec *executionContext) _Mail(ctx context.Context, sel ast.SelectionSet, obj
 		case "body":
 
 			out.Values[i] = ec._Mail_body(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "attach":
+
+			out.Values[i] = ec._Mail_attach(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
