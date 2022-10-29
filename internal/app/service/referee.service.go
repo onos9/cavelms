@@ -6,6 +6,8 @@ import (
 
 	"github.com/cavelms/internal/app/repository"
 	"github.com/cavelms/internal/model"
+	"github.com/cavelms/pkg/mail"
+	"github.com/cavelms/pkg/utils"
 )
 
 type refereeService interface {
@@ -37,6 +39,49 @@ func (r *referee) CreateReferee(ctx context.Context, input model.NewReferee) (*m
 	if err != nil {
 		return nil, err
 	}
+
+	user := model.User{ID: input.UserID}
+	err = r.DB.FetchByID(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	data := map[string]interface{}{
+		"fullName":    user.FullName,
+		"refereeName": input.FullName,
+		"upload_link": "https://dev.beznet.org/signup/" + input.UserID,
+	}
+
+	body, err := utils.ParseTemplate("reference", data)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := mail.Mailer{
+		ToAddrs: []string{input.Email},
+		Subject: "Account Activation",
+		Body:    body,
+	}
+
+	fs := mail.Template
+	file, err := fs.Open("template/reference_form.doc")
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	fileInfo, _ := file.Stat()
+	size := fileInfo.Size()
+
+	buffer := make([]byte, size)
+	file.Read(buffer)
+	msg.Attachment = buffer
+	msg.Filename = fileInfo.Name()
+
+	err = r.Mail.Send(msg)
+	if err != nil {
+		return nil, err
+	}
+
 	return &referee, nil
 }
 func (r *referee) UpdateReferee(ctx context.Context, data interface{}) (*model.Referee, error) {
