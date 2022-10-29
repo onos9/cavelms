@@ -49,7 +49,7 @@ func (r *referee) CreateReferee(ctx context.Context, input model.NewReferee) (*m
 	data := map[string]interface{}{
 		"fullName":    user.FullName,
 		"refereeName": input.FullName,
-		"upload_link": "https://dev.beznet.org/signup/" + input.UserID,
+		"upload_link": "https://dev.beznet.org/signup/upload?id=" + input.UserID,
 	}
 
 	body, err := utils.ParseTemplate("reference", data)
