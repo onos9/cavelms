@@ -1,20 +1,17 @@
 type Mail {
-  fromAddr: String!
-  toAddrs: [String!]
+  to: [String!]
   subject: String!
   body: String!
 }
 
-input newMail {
-  FromAddr: String!
-  toAddrs: [String!]
+input NewMail {
+  to: [String!]
   subject: String!
-  body: String!
-  data: Any
+  body: Any!
 }
 
 extend type Mutation {
-  send(input: newMail): Mail
+  send(tpl: String!, input: NewMail): Mail
   deleteMail(id: ID!): Mail
 }
 

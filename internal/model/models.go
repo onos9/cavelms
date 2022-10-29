@@ -103,10 +103,9 @@ type Grade struct {
 }
 
 type Mail struct {
-	FromAddr string   `json:"fromAddr" bson:"fromAddr,omitempty"`
-	ToAddrs  []string `json:"toAddrs" bson:"toAddrs,omitempty"`
-	Subject  string   `json:"subject" bson:"subject,omitempty"`
-	Body     string   `json:"body" bson:"body,omitempty"`
+	To      []string `json:"to" bson:"to,omitempty"`
+	Subject string   `json:"subject" bson:"subject,omitempty"`
+	Body    string   `json:"body" bson:"body,omitempty"`
 }
 
 type NewAccount struct {
@@ -140,6 +139,12 @@ type NewFile struct {
 	File     graphql.Upload `json:"file" bson:"file,omitempty"`
 	Title    string         `json:"title" bson:"title,omitempty"`
 	Category string         `json:"category" bson:"category,omitempty"`
+}
+
+type NewMail struct {
+	To      []string    `json:"to" bson:"to,omitempty"`
+	Subject string      `json:"subject" bson:"subject,omitempty"`
+	Body    interface{} `json:"body" bson:"body,omitempty"`
 }
 
 type NewNote struct {
@@ -362,12 +367,4 @@ type Video struct {
 	CreatedAt   *time.Time `json:"createdAt" bson:"createdAt,omitempty"`
 	UpdatedAt   *time.Time `json:"updatedAt" bson:"updatedAt,omitempty"`
 	DeletedAt   *time.Time `json:"deletedAt" bson:"deletedAt,omitempty"`
-}
-
-type NewMail struct {
-	FromAddr string      `json:"FromAddr" bson:"FromAddr,omitempty"`
-	ToAddrs  []string    `json:"toAddrs" bson:"toAddrs,omitempty"`
-	Subject  string      `json:"subject" bson:"subject,omitempty"`
-	Body     string      `json:"body" bson:"body,omitempty"`
-	Data     interface{} `json:"data" bson:"data,omitempty"`
 }

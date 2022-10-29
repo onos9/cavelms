@@ -141,10 +141,9 @@ type ComplexityRoot struct {
 	}
 
 	Mail struct {
-		Body     func(childComplexity int) int
-		FromAddr func(childComplexity int) int
-		Subject  func(childComplexity int) int
-		ToAddrs  func(childComplexity int) int
+		Body    func(childComplexity int) int
+		Subject func(childComplexity int) int
+		To      func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -168,7 +167,7 @@ type ComplexityRoot struct {
 		ForgetPassword   func(childComplexity int, email string) int
 		LogOut           func(childComplexity int) int
 		ResetPassword    func(childComplexity int, email string, password string) int
-		Send             func(childComplexity int, input *model.NewMail) int
+		Send             func(childComplexity int, tpl string, input *model.NewMail) int
 		SignIn           func(childComplexity int, email string, password string) int
 		SignUp           func(childComplexity int, fullName string, email string, password string, role string) int
 		UpdateCourse     func(childComplexity int, data interface{}) int
@@ -394,7 +393,7 @@ type MutationResolver interface {
 	CreateFile(ctx context.Context, input model.NewFile) (*model.File, error)
 	UpdateFile(ctx context.Context, input interface{}) (*model.File, error)
 	UploadFiles(ctx context.Context, input []*model.UploadFile) ([]*model.File, error)
-	Send(ctx context.Context, input *model.NewMail) (*model.Mail, error)
+	Send(ctx context.Context, tpl string, input *model.NewMail) (*model.Mail, error)
 	DeleteMail(ctx context.Context, id string) (*model.Mail, error)
 	CreateNote(ctx context.Context, input model.NewNote) (*model.Note, error)
 	CreateQuiz(ctx context.Context, input model.NewQuiz) (*model.Quiz, error)
@@ -948,13 +947,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mail.Body(childComplexity), true
 
-	case "Mail.fromAddr":
-		if e.complexity.Mail.FromAddr == nil {
-			break
-		}
-
-		return e.complexity.Mail.FromAddr(childComplexity), true
-
 	case "Mail.subject":
 		if e.complexity.Mail.Subject == nil {
 			break
@@ -962,12 +954,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mail.Subject(childComplexity), true
 
-	case "Mail.toAddrs":
-		if e.complexity.Mail.ToAddrs == nil {
+	case "Mail.to":
+		if e.complexity.Mail.To == nil {
 			break
 		}
 
-		return e.complexity.Mail.ToAddrs(childComplexity), true
+		return e.complexity.Mail.To(childComplexity), true
 
 	case "Mutation.changePassword":
 		if e.complexity.Mutation.ChangePassword == nil {
@@ -1214,7 +1206,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Send(childComplexity, args["input"].(*model.NewMail)), true
+		return e.complexity.Mutation.Send(childComplexity, args["tpl"].(string), args["input"].(*model.NewMail)), true
 
 	case "Mutation.signIn":
 		if e.complexity.Mutation.SignIn == nil {
@@ -2504,6 +2496,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputNewCourse,
 		ec.unmarshalInputNewEducation,
 		ec.unmarshalInputNewFile,
+		ec.unmarshalInputNewMail,
 		ec.unmarshalInputNewNote,
 		ec.unmarshalInputNewQuiz,
 		ec.unmarshalInputNewReferee,
@@ -2513,7 +2506,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateRole,
 		ec.unmarshalInputUpdateSetting,
 		ec.unmarshalInputUploadFile,
-		ec.unmarshalInputnewMail,
 	)
 	first := true
 
@@ -2780,22 +2772,19 @@ extend type Query {
 }
 `, BuiltIn: false},
 	{Name: "../schema/mail.gql", Input: `type Mail {
-  fromAddr: String!
-  toAddrs: [String!]
+  to: [String!]
   subject: String!
   body: String!
 }
 
-input newMail {
-  FromAddr: String!
-  toAddrs: [String!]
+input NewMail {
+  to: [String!]
   subject: String!
-  body: String!
-  data: Any
+  body: Any!
 }
 
 extend type Mutation {
-  send(input: newMail): Mail
+  send(tpl: String!, input: NewMail): Mail
   deleteMail(id: ID!): Mail
 }
 
@@ -3429,15 +3418,24 @@ func (ec *executionContext) field_Mutation_resetPassword_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_send_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.NewMail
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOnewMail2ᚖgithubᚗcomᚋcavelmsᚋinternalᚋmodelᚐNewMail(ctx, tmp)
+	var arg0 string
+	if tmp, ok := rawArgs["tpl"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tpl"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["tpl"] = arg0
+	var arg1 *model.NewMail
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalONewMail2ᚖgithubᚗcomᚋcavelmsᚋinternalᚋmodelᚐNewMail(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -7046,8 +7044,8 @@ func (ec *executionContext) fieldContext_Grade_courseId(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Mail_fromAddr(ctx context.Context, field graphql.CollectedField, obj *model.Mail) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mail_fromAddr(ctx, field)
+func (ec *executionContext) _Mail_to(ctx context.Context, field graphql.CollectedField, obj *model.Mail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mail_to(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7060,51 +7058,7 @@ func (ec *executionContext) _Mail_fromAddr(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FromAddr, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mail_fromAddr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mail",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mail_toAddrs(ctx context.Context, field graphql.CollectedField, obj *model.Mail) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mail_toAddrs(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ToAddrs, nil
+		return obj.To, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7118,7 +7072,7 @@ func (ec *executionContext) _Mail_toAddrs(ctx context.Context, field graphql.Col
 	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mail_toAddrs(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mail_to(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mail",
 		Field:      field,
@@ -9541,7 +9495,7 @@ func (ec *executionContext) _Mutation_send(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Send(rctx, fc.Args["input"].(*model.NewMail))
+		return ec.resolvers.Mutation().Send(rctx, fc.Args["tpl"].(string), fc.Args["input"].(*model.NewMail))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9563,10 +9517,8 @@ func (ec *executionContext) fieldContext_Mutation_send(ctx context.Context, fiel
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "fromAddr":
-				return ec.fieldContext_Mail_fromAddr(ctx, field)
-			case "toAddrs":
-				return ec.fieldContext_Mail_toAddrs(ctx, field)
+			case "to":
+				return ec.fieldContext_Mail_to(ctx, field)
 			case "subject":
 				return ec.fieldContext_Mail_subject(ctx, field)
 			case "body":
@@ -9625,10 +9577,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteMail(ctx context.Context
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "fromAddr":
-				return ec.fieldContext_Mail_fromAddr(ctx, field)
-			case "toAddrs":
-				return ec.fieldContext_Mail_toAddrs(ctx, field)
+			case "to":
+				return ec.fieldContext_Mail_to(ctx, field)
 			case "subject":
 				return ec.fieldContext_Mail_subject(ctx, field)
 			case "body":
@@ -12098,10 +12048,8 @@ func (ec *executionContext) fieldContext_Query_mail(ctx context.Context, field g
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "fromAddr":
-				return ec.fieldContext_Mail_fromAddr(ctx, field)
-			case "toAddrs":
-				return ec.fieldContext_Mail_toAddrs(ctx, field)
+			case "to":
+				return ec.fieldContext_Mail_to(ctx, field)
 			case "subject":
 				return ec.fieldContext_Mail_subject(ctx, field)
 			case "body":
@@ -12160,10 +12108,8 @@ func (ec *executionContext) fieldContext_Query_mails(ctx context.Context, field 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "fromAddr":
-				return ec.fieldContext_Mail_fromAddr(ctx, field)
-			case "toAddrs":
-				return ec.fieldContext_Mail_toAddrs(ctx, field)
+			case "to":
+				return ec.fieldContext_Mail_to(ctx, field)
 			case "subject":
 				return ec.fieldContext_Mail_subject(ctx, field)
 			case "body":
@@ -20866,6 +20812,50 @@ func (ec *executionContext) unmarshalInputNewFile(ctx context.Context, obj inter
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNewMail(ctx context.Context, obj interface{}) (model.NewMail, error) {
+	var it model.NewMail
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"to", "subject", "body"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "to":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			it.To, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "subject":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subject"))
+			it.Subject, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "body":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("body"))
+			it.Body, err = ec.unmarshalNAny2interface(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewNote(ctx context.Context, obj interface{}) (model.NewNote, error) {
 	var it model.NewNote
 	asMap := map[string]interface{}{}
@@ -21245,66 +21235,6 @@ func (ec *executionContext) unmarshalInputUploadFile(ctx context.Context, obj in
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
 			it.File, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputnewMail(ctx context.Context, obj interface{}) (model.NewMail, error) {
-	var it model.NewMail
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"FromAddr", "toAddrs", "subject", "body", "data"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "FromAddr":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("FromAddr"))
-			it.FromAddr, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "toAddrs":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toAddrs"))
-			it.ToAddrs, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "subject":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subject"))
-			it.Subject, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "body":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("body"))
-			it.Body, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "data":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("data"))
-			it.Data, err = ec.unmarshalOAny2interface(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -21897,16 +21827,9 @@ func (ec *executionContext) _Mail(ctx context.Context, sel ast.SelectionSet, obj
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mail")
-		case "fromAddr":
+		case "to":
 
-			out.Values[i] = ec._Mail_fromAddr(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "toAddrs":
-
-			out.Values[i] = ec._Mail_toAddrs(ctx, field, obj)
+			out.Values[i] = ec._Mail_to(ctx, field, obj)
 
 		case "subject":
 
@@ -24062,6 +23985,27 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) unmarshalNAny2interface(ctx context.Context, v interface{}) (interface{}, error) {
+	res, err := graphql.UnmarshalAny(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAny2interface(ctx context.Context, sel ast.SelectionSet, v interface{}) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalAny(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -25148,6 +25092,14 @@ func (ec *executionContext) unmarshalONewCourse2ᚖgithubᚗcomᚋcavelmsᚋinte
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalONewMail2ᚖgithubᚗcomᚋcavelmsᚋinternalᚋmodelᚐNewMail(ctx context.Context, v interface{}) (*model.NewMail, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputNewMail(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalONewUser2ᚖgithubᚗcomᚋcavelmsᚋinternalᚋmodelᚐNewUser(ctx context.Context, v interface{}) (*model.NewUser, error) {
 	if v == nil {
 		return nil, nil
@@ -25679,14 +25631,6 @@ func (ec *executionContext) marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 		return graphql.Null
 	}
 	return ec.___Type(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOnewMail2ᚖgithubᚗcomᚋcavelmsᚋinternalᚋmodelᚐNewMail(ctx context.Context, v interface{}) (*model.NewMail, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputnewMail(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 // endregion ***************************** type.gotpl *****************************

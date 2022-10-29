@@ -9,8 +9,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net"
+	"net/http"
 	"net/smtp"
 	"strings"
 
@@ -18,14 +18,14 @@ import (
 )
 
 type Mailer struct {
-	FromAddr   string        `json:"fromAddr"`
-	ToAddrs    []string      `json:"toAddrs"`
-	CC         []string      `json:"cc"`
-	BCC        []string      `json:"bcc"`
-	Subject    string        `json:"subject"`
-	Body       string        `json:"body"`
-	Attachment io.ReadSeeker `json:"attachment"`
-	Filename   string        `json:"filename"`
+	FromAddr   string   `json:"fromAddr"`
+	ToAddrs    []string `json:"toAddrs"`
+	CC         []string `json:"cc"`
+	BCC        []string `json:"bcc"`
+	Subject    string   `json:"subject"`
+	Body       string   `json:"body"`
+	Attachment []byte   `json:"attachment"`
+	Filename   string   `json:"filename"`
 
 	IMAPServer string `json:"imapserver"`
 	SMTPServer string `json:"smtpserver"`
@@ -38,64 +38,19 @@ type Mailer struct {
 	*smtp.Client
 }
 
-// func init() {
-// 	conf := Mailer{
-// 		FromAddr:   "admin@adullam.ng",
-// 		SMTPServer: "smtppro.zoho.com:465",
-// 		SSL:        true,
-// 		Password:   "#1414Bruno#",
-// 	}
-
-// 	m, err := NewMailer(conf)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	file, err := os.Open("qservers.pdf")
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		os.Exit(1)
-// 	}
-
-// 	defer file.Close()
-
-// 	fileInfo, _ := file.Stat()
-// 	var size int64 = fileInfo.Size()
-
-// 	buffer := make([]byte, size)
-
-// 	// read file content to buffer
-// 	file.Read(buffer)
-
-// 	// fileBytes := bytes.NewReader(buffer)
-
-// 	m.ToAddrs = []string{"onosbrown.saved@gmail.com"}
-// 	m.Subject = "Golang example send mail in HTML format with attachment"
-// 	m.Body = "<html><body><h1>Hi There</h1><p>this is sample email (with attachment) sent via golang program</p></body></html>"
-// 	err = m.SendMail()
-// 	if err != nil {
-// 		log.Println(err)
-// 	}
-// }
-
-func NewMailer(config interface{}) (*Mailer, error) {
-
+func NewMailer(config *Mailer) error {
 	m := Mailer{}
 
 	b, err := json.Marshal(config)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	err = json.Unmarshal(b, &m)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	m.boundary = "**=myohmy689407924327"
-	m.host, _, _ = net.SplitHostPort(m.SMTPServer)
-	m.auth = smtp.PlainAuth("", m.FromAddr, m.Password, m.host)
-
-	return &m, nil
+	
+	return nil
 }
 
 func (m *Mailer) SendMail() error {
@@ -104,6 +59,9 @@ func (m *Mailer) SendMail() error {
 		return err
 	}
 
+	m.boundary = "**=myohmy689407924327"
+	m.host, _, _ = net.SplitHostPort(m.SMTPServer)
+	m.auth = smtp.PlainAuth("", m.FromAddr, m.Password, m.host)
 	if err := m.Auth(m.auth); err != nil {
 		return err
 	}
@@ -136,7 +94,7 @@ func (m *Mailer) dialSmtp(ssl bool) error {
 
 	// Connect to non-secure SMTP Server
 	if !ssl {
-		c, err := smtp.Dial("smtppro.zoho.com:465")
+		c, err := smtp.Dial(m.SMTPServer)
 		if err != nil {
 			return err
 		}
@@ -147,7 +105,7 @@ func (m *Mailer) dialSmtp(ssl bool) error {
 	}
 
 	// // Connect to secure SMTP Server running on 465 with an ssl connection
-	conn, err := tls.Dial("tcp", "smtppro.zoho.com:465", tlsconfig)
+	conn, err := tls.Dial("tcp", m.SMTPServer, tlsconfig)
 	if err != nil {
 		return err
 	}
@@ -185,11 +143,11 @@ func (m *Mailer) getMessage(rcpt string) string {
 	h := m.setHeaders()
 	c := m.setBody()
 	contents := append(h, c...)
-	if len([]rune(m.Filename)) > 0 {
+	if m.Filename != "" {
 		a := m.attachFile()
 		contents = append(contents, a...)
 	}
-
+	contents = append(contents, fmt.Sprintf("\r\n--MIXED-%s--", m.boundary))
 	return strings.Join(contents, "\r\n")
 }
 
@@ -210,16 +168,14 @@ func (m *Mailer) getRecipients() (string, error) {
 }
 
 func (m *Mailer) attachFile() []string {
-	//read file
-	b := []byte{}
-	m.Attachment.Read(b)
-
+	b := make([]byte, base64.StdEncoding.EncodedLen(len(m.Attachment)))
+	base64.StdEncoding.Encode(b, m.Attachment)
 	attachment := []string{
-		fmt.Sprintf("\r\n--%s\r\n", m.boundary),
-		"Content-Type: text/plain; charset=\"utf-8\"",
+		fmt.Sprintf("\r\n--MIXED-%s", m.boundary),
+		fmt.Sprintf("Content-Type: %s", http.DetectContentType(m.Attachment)),
 		"Content-Transfer-Encoding: base64",
-		fmt.Sprintf("Content-Disposition: attachment;filename=\"%s", m.Filename),
-		fmt.Sprintf("\r\n%s", base64.StdEncoding.EncodeToString(b)),
+		fmt.Sprintf("Content-Disposition: attachment;filename=%s", m.Filename),
+		fmt.Sprintf("\r\n%s", b),
 	}
 
 	return attachment
@@ -228,10 +184,9 @@ func (m *Mailer) attachFile() []string {
 func (m *Mailer) setBody() []string {
 	//place HTML message
 	content := []string{
-		fmt.Sprintf("\r\n--%s\r\n", m.boundary),
-		// "Content-Type: text/html; charset=\"utf-8\"",
-		"Content-Transfer-Encoding: 7bit",
 		fmt.Sprintf("\r\n%s", m.Body),
+		fmt.Sprintf("\r\n--ALTERNATIVE-%s--", m.boundary),
+		fmt.Sprintf("\r\n--RELATED-%s--", m.boundary),
 	}
 
 	return content
@@ -253,7 +208,54 @@ func (m *Mailer) setHeaders() []string {
 	}
 
 	headers = append(headers, "MIME-Version: 1.0")
-	headers = append(headers, fmt.Sprintf("Content-Type: multipart/mixed; boundary=\"%s\"", m.boundary))
+	headers = append(headers, fmt.Sprintf("Content-Type: multipart/mixed; boundary=MIXED-%s", m.boundary))
+	headers = append(headers, fmt.Sprintf("\r\n--MIXED-%s", m.boundary))
+	headers = append(headers, fmt.Sprintf("Content-Type: multipart/related; boundary=RELATED-%s", m.boundary))
+	headers = append(headers, fmt.Sprintf("\r\n--RELATED-%s", m.boundary))
+	headers = append(headers, fmt.Sprintf("Content-Type: multipart/alternative; boundary=ALTERNATIVE-%s", m.boundary))
+	headers = append(headers, fmt.Sprintf("\r\n--ALTERNATIVE-%s", m.boundary))
+	headers = append(headers, "Content-Type: text/html; charset=utf-8")
 
 	return headers
 }
+
+// func init() {
+// 	conf := Mailer{
+// 		FromAddr:   "admin@adullam.ng",
+// 		SMTPServer: "smtppro.zoho.com:465",
+// 		SSL:        true,
+// 		Password:   "#1414Bruno#",
+// 	}
+
+// 	m, err := NewMailer(conf)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// 	file, err := os.Open("qservers.pdf")
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		os.Exit(1)
+// 	}
+
+// 	defer file.Close()
+
+// 	fileInfo, _ := file.Stat()
+// 	var size int64 = fileInfo.Size()
+
+// 	buffer := make([]byte, size)
+
+// 	// read file content to buffer
+// 	file.Read(buffer)
+
+// 	// m.Attachment = buffer
+// 	// m.Filename = fileInfo.Name()
+
+// 	m.ToAddrs = []string{"onosbrown.saved@gmail.com"}
+// 	m.Subject = "Golang example send mail in HTML format with attachment"
+// 	m.Body = "<html><body><h1>Hi There</h1><p>this is sample email (with attachment) sent via golang program</p></body></html>"
+// 	err = m.SendMail()
+// 	if err != nil {
+// 		log.Println(err)
+// 	}
+// }

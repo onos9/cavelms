@@ -11,8 +11,12 @@ import (
 )
 
 // Send is the resolver for the send field.
-func (r *mutationResolver) Send(ctx context.Context, input *model.NewMail) (*model.Mail, error) {
-	panic(fmt.Errorf("not implemented: Send - send"))
+func (r *mutationResolver) Send(ctx context.Context, tpl string, input *model.NewMail) (*model.Mail, error) {
+	m, err := r.Service.SendMail(tpl, input)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // DeleteMail is the resolver for the deleteMail field.

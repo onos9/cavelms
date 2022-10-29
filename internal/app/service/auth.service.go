@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -77,14 +76,14 @@ func (a *auth) SignUp(ctx context.Context, fullName, email, password, role strin
 	}
 
 	mail := model.Mail{
-		ToAddrs: []string{email},
+		To:      []string{email},
 		Subject: "Account Activation",
 		Body:    body,
 	}
 
-	err = a.Mail.Send("signup", mail)
+	err = a.Mail.Send(mail)
 	if err != nil {
-		log.Panicln(err)
+		return nil, err
 	}
 	return user, nil
 }
