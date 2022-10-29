@@ -49,18 +49,19 @@ func NewMailer(config *Mailer) error {
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
 func (m *Mailer) SendMail() error {
+	m.boundary = "**=myohmy689407924327"
+	m.host, _, _ = net.SplitHostPort(m.SMTPServer)
+
 	err := m.dialSmtp(m.SSL)
 	if err != nil {
 		return err
 	}
 
-	m.boundary = "**=myohmy689407924327"
-	m.host, _, _ = net.SplitHostPort(m.SMTPServer)
 	m.auth = smtp.PlainAuth("", m.FromAddr, m.Password, m.host)
 	if err := m.Auth(m.auth); err != nil {
 		return err
@@ -220,14 +221,14 @@ func (m *Mailer) setHeaders() []string {
 }
 
 // func init() {
-// 	conf := Mailer{
+// 	m := &Mailer{
 // 		FromAddr:   "admin@adullam.ng",
 // 		SMTPServer: "smtppro.zoho.com:465",
 // 		SSL:        true,
 // 		Password:   "#1414Bruno#",
 // 	}
 
-// 	m, err := NewMailer(conf)
+// 	err := NewMailer(m)
 // 	if err != nil {
 // 		log.Fatal(err)
 // 	}
