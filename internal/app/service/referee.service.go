@@ -59,23 +59,23 @@ func (r *referee) CreateReferee(ctx context.Context, input model.NewReferee) (*m
 
 	msg := mail.Mailer{
 		ToAddrs: []string{input.Email},
-		Subject: "Account Activation",
+		Subject: "Adullam Reference",
 		Body:    body,
 	}
 
-	fs := mail.Template
-	file, err := fs.Open("template/reference_form.doc")
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	fileInfo, _ := file.Stat()
-	size := fileInfo.Size()
+	// fs := mail.Template
+	// file, err := fs.Open("template/reference_form.doc")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// defer file.Close()
+	// fileInfo, _ := file.Stat()
+	// size := fileInfo.Size()
 
-	buffer := make([]byte, size)
-	file.Read(buffer)
-	msg.Attachment = buffer
-	msg.Filename = fileInfo.Name()
+	// buffer := make([]byte, size)
+	// file.Read(buffer)
+	// msg.Attachment = buffer
+	// msg.Filename = fileInfo.Name()
 
 	err = r.Mail.Send(msg)
 	if err != nil {
