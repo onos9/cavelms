@@ -20,7 +20,7 @@ const MAX_UPLOAD_SIZE = 1000 * 1024 * 1024 // 1GB
 type fileService interface {
 	CreateFile(ctx context.Context, input model.NewFile) (*model.File, error)
 	UpdateFile(ctx context.Context, data interface{}) (*model.File, error)
-	GetFiles(ctx context.Context) ([]*model.File, error)
+	GetFiles(ctx context.Context, userId string) ([]*model.File, error)
 	GetFileByID(ctx context.Context, id string) (*model.File, error)
 }
 
@@ -109,16 +109,18 @@ func (f *file) UpdateFile(ctx context.Context, data interface{}) (*model.File, e
 
 	return &file, nil
 }
-func (f *file) GetFiles(ctx context.Context) ([]*model.File, error) {
+func (f *file) GetFiles(ctx context.Context, userId string) ([]*model.File, error) {
 	file := new(model.File)
 	files := []model.File{}
-	err := f.DB.FetchAll(&files, file)
+	
+	file.UserID = userId
+	err := f.DB.FetchByUserID(&files, file)
 	if err != nil {
 		return nil, err
 	}
 
 	fileList := []*model.File{}
-	for i := 0; i < len(files); i++{
+	for i := 0; i < len(files); i++ {
 		fileList = append(fileList, &files[i])
 	}
 

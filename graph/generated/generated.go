@@ -198,7 +198,7 @@ type ComplexityRoot struct {
 		Education  func(childComplexity int, id string) int
 		Educations func(childComplexity int, userID *string) int
 		File       func(childComplexity int, id string) int
-		Files      func(childComplexity int) int
+		Files      func(childComplexity int, userID string) int
 		Mail       func(childComplexity int, id string) int
 		Mails      func(childComplexity int) int
 		Note       func(childComplexity int, id string) int
@@ -417,7 +417,7 @@ type QueryResolver interface {
 	Education(ctx context.Context, id string) (*model.Education, error)
 	Educations(ctx context.Context, userID *string) ([]*model.Education, error)
 	File(ctx context.Context, id string) (*model.File, error)
-	Files(ctx context.Context) ([]*model.File, error)
+	Files(ctx context.Context, userID string) ([]*model.File, error)
 	Mail(ctx context.Context, id string) (*model.Mail, error)
 	Mails(ctx context.Context) ([]*model.Mail, error)
 	Note(ctx context.Context, id string) (*model.Note, error)
@@ -1447,7 +1447,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Files(childComplexity), true
+		args, err := ec.field_Query_files_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Files(childComplexity, args["userId"].(string)), true
 
 	case "Query.mail":
 		if e.complexity.Query.Mail == nil {
@@ -2775,7 +2780,7 @@ extend type Mutation {
 
 extend type Query {
   file(id: ID!): File!
-  files: [File!]!
+  files(userId: ID!): [File!]!
 }
 `, BuiltIn: false},
 	{Name: "../schema/mail.gql", Input: `type Mail {
@@ -3709,6 +3714,21 @@ func (ec *executionContext) field_Query_file_args(ctx context.Context, rawArgs m
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_files_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["userId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userId"] = arg0
 	return args, nil
 }
 
@@ -12010,7 +12030,7 @@ func (ec *executionContext) _Query_files(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Files(rctx)
+		return ec.resolvers.Query().Files(rctx, fc.Args["userId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12064,6 +12084,17 @@ func (ec *executionContext) fieldContext_Query_files(ctx context.Context, field 
 			}
 			return nil, fmt.Errorf("no field named %q was found under type File", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_files_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }

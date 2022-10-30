@@ -33,7 +33,7 @@ func newMongoDBRepository() MongoDB {
 		FullName:     "Bezaleel Onojeta",
 		Email:        os.Getenv("ADMIN_EMAIL"),
 		PasswordHash: hashedPass,
-		Role:         "Administrator",
+		Role:         "administrator",
 		IsVerified:   true,
 	}
 	//Save User To DB

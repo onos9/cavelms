@@ -46,8 +46,8 @@ func (r *queryResolver) File(ctx context.Context, id string) (*model.File, error
 }
 
 // Files is the resolver for the files field.
-func (r *queryResolver) Files(ctx context.Context) ([]*model.File, error) {
-	files, err := r.Service.GetFiles(ctx)
+func (r *queryResolver) Files(ctx context.Context, userID string) ([]*model.File, error) {
+	files, err := r.Service.GetFiles(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
