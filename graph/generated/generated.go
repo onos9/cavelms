@@ -178,7 +178,7 @@ type ComplexityRoot struct {
 		UpdateRole       func(childComplexity int, input *model.UpdateRole) int
 		UpdateUser       func(childComplexity int, data interface{}) int
 		UploadFiles      func(childComplexity int, input []*model.UploadFile) int
-		VerifyEmail      func(childComplexity int, id string, code string) int
+		VerifyEmail      func(childComplexity int, id string, code string, resend bool) int
 	}
 
 	Note struct {
@@ -384,7 +384,7 @@ type MutationResolver interface {
 	ForgetPassword(ctx context.Context, email string) (*model.User, error)
 	ResetPassword(ctx context.Context, email string, password string) (*model.User, error)
 	ChangePassword(ctx context.Context, email string, token string) (*model.User, error)
-	VerifyEmail(ctx context.Context, id string, code string) (*model.User, error)
+	VerifyEmail(ctx context.Context, id string, code string, resend bool) (*model.User, error)
 	CreateCourse(ctx context.Context, input *model.NewCourse) (*model.User, error)
 	UpdateCourse(ctx context.Context, data interface{}) (*model.User, error)
 	DeleteCourse(ctx context.Context, id *string) (*model.User, error)
@@ -1334,7 +1334,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.VerifyEmail(childComplexity, args["id"].(string), args["code"].(string)), true
+		return e.complexity.Mutation.VerifyEmail(childComplexity, args["id"].(string), args["code"].(string), args["resend"].(bool)), true
 
 	case "Note.courseId":
 		if e.complexity.Note.CourseID == nil {
@@ -2617,7 +2617,7 @@ extend type Mutation {
   forgetPassword(email: String!): User
   resetPassword(email: String!, password: String!): User
   changePassword(email: String!, token: String!): User
-  verifyEmail(id: ID!, code: String!): User
+  verifyEmail(id: ID!, code: String!, resend: Boolean!): User
 }
 `, BuiltIn: false},
 	{Name: "../schema/course.gql", Input: `type Course {
@@ -2764,7 +2764,6 @@ input UploadFile {
 input NewFile {
   userId: ID!
   file: Upload!
-  title: String!
   category:String!
 }
 
@@ -3641,6 +3640,15 @@ func (ec *executionContext) field_Mutation_verifyEmail_args(ctx context.Context,
 		}
 	}
 	args["code"] = arg1
+	var arg2 bool
+	if tmp, ok := rawArgs["resend"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resend"))
+		arg2, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["resend"] = arg2
 	return args, nil
 }
 
@@ -8226,7 +8234,7 @@ func (ec *executionContext) _Mutation_verifyEmail(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().VerifyEmail(rctx, fc.Args["id"].(string), fc.Args["code"].(string))
+		return ec.resolvers.Mutation().VerifyEmail(rctx, fc.Args["id"].(string), fc.Args["code"].(string), fc.Args["resend"].(bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -20819,7 +20827,7 @@ func (ec *executionContext) unmarshalInputNewFile(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"userId", "file", "title", "category"}
+	fieldsInOrder := [...]string{"userId", "file", "category"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20839,14 +20847,6 @@ func (ec *executionContext) unmarshalInputNewFile(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
 			it.File, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "title":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
-			it.Title, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}

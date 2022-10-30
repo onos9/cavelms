@@ -37,7 +37,6 @@ func newFileService(repo *repository.Repository) fileService {
 func (d *file) CreateFile(ctx context.Context, input model.NewFile) (*model.File, error) {
 	file := model.File{
 		Filename:    input.File.Filename,
-		Title:       input.Title,
 		UserID:      input.UserID,
 		ContentType: input.File.ContentType,
 		Size:        input.File.Size,

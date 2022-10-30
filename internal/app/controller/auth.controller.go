@@ -57,8 +57,8 @@ func (r *mutationResolver) ChangePassword(ctx context.Context, email string, tok
 }
 
 // VerifyEmail is the resolver for the verifyEmail field.
-func (r *mutationResolver) VerifyEmail(ctx context.Context, id string, code string) (*model.User, error) {
-	user, err := r.Service.VerifyEmail(ctx, id, code)
+func (r *mutationResolver) VerifyEmail(ctx context.Context, id string, code string, resend bool) (*model.User, error) {
+	user, err := r.Service.VerifyEmail(ctx, id, code, resend)
 	if err != nil {
 		return nil, err
 	}

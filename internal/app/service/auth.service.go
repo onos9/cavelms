@@ -21,7 +21,7 @@ type authService interface {
 	SignIn(ctx context.Context, email, password string) (*model.User, error)
 	SignOut(ctx context.Context) error
 	RefreshToken(ctx context.Context) (*model.User, error)
-	VerifyEmail(ctx context.Context, id, code string) (*model.User, error)
+	VerifyEmail(ctx context.Context, id, code string, resend bool) (*model.User, error)
 	ForgetPassword(email string) (*model.User, error)
 	ResetPassword(email, password string) (*model.User, error)
 	ChangePassword(email, token string) (*model.User, error)
@@ -76,8 +76,8 @@ func (a *auth) SignUp(ctx context.Context, fullName, email, password, role strin
 		return nil, err
 	}
 
-	mail := mail.Mailer {
-		ToAddrs:      []string{email},
+	mail := mail.Mailer{
+		ToAddrs: []string{email},
 		Subject: "Account Activation",
 		Body:    body,
 	}
@@ -160,27 +160,35 @@ func (a *auth) RefreshToken(ctx context.Context) (*model.User, error) {
 	return &user, nil
 }
 
-func (a *auth) VerifyEmail(ctx context.Context, id, code string) (*model.User, error) {
-	c, err := a.RDBS.Get(id)
+func (a *auth) VerifyEmail(ctx context.Context, id, code string, resend bool) (*model.User, error) {
+	user := &model.User{}
+	user.ID = id
+
+	err := a.DB.FetchByID(user)
 	if err != nil {
 		return nil, err
+	}
+
+	if resend {
+		c := utils.GenerateVerificationCode()
+		err := a.sendCode(user, c)
+		if err != nil {
+			return nil, err
+		}
+		return user, nil
+	}
+
+	c, err := a.RDBS.Get(id)
+	if err != nil {
+		return nil, errors.New("error: Expired Code")
 	}
 
 	if c != code {
 		return nil, errors.New("error: Invalid verification code")
 	}
 
-	user := &model.User{
-		ID:         id,
-		IsVerified: true,
-	}
-
+	user.IsVerified = true
 	err = a.DB.UpdateOne(user)
-	if err != nil {
-		return nil, err
-	}
-
-	err = a.DB.FetchByID(user)
 	if err != nil {
 		return nil, err
 	}
@@ -213,6 +221,36 @@ func (a *auth) setCookie(ctx context.Context, t *Token) {
 		Secure:   true,
 	})
 
+}
+
+func (a *auth) sendCode(user *model.User, code string) error {
+	err := a.RDBS.Set(user.ID, strings.TrimSpace(code), 600)
+	if err != nil {
+		return err
+	}
+
+	data := map[string]interface{}{
+		"code":     code,
+		"fullname": user.FullName,
+	}
+
+	body, err := utils.ParseTemplate("signup", data)
+	if err != nil {
+		return  err
+	}
+
+	mail := mail.Mailer{
+		ToAddrs: []string{user.Email},
+		Subject: "Account Activation",
+		Body:    body,
+	}
+
+	err = a.Mail.Send(mail)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *auth) RequireAuth(ctx context.Context, obj interface{}, next graphql.Resolver, token *string) (res interface{}, err error) {

@@ -138,7 +138,6 @@ type NewEducation struct {
 type NewFile struct {
 	UserID   string         `json:"userId" bson:"userId,omitempty"`
 	File     graphql.Upload `json:"file" bson:"file,omitempty"`
-	Title    string         `json:"title" bson:"title,omitempty"`
 	Category string         `json:"category" bson:"category,omitempty"`
 }
 

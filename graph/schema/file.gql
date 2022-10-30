@@ -21,7 +21,6 @@ input UploadFile {
 input NewFile {
   userId: ID!
   file: Upload!
-  title: String!
   category:String!
 }
 

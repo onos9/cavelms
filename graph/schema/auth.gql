@@ -33,5 +33,5 @@ extend type Mutation {
   forgetPassword(email: String!): User
   resetPassword(email: String!, password: String!): User
   changePassword(email: String!, token: String!): User
-  verifyEmail(id: ID!, code: String!): User
+  verifyEmail(id: ID!, code: String!, resend: Boolean!): User
 }
