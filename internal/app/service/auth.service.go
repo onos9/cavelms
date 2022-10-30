@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -59,7 +60,7 @@ func (a *auth) SignUp(ctx context.Context, fullName, email, password, role strin
 	if err != nil {
 		return nil, err
 	}
-
+	log.Println(user.ID)
 	code := utils.GenerateVerificationCode()
 	err = a.RDBS.Set(user.ID, strings.TrimSpace(code), 600)
 	if err != nil {
@@ -177,7 +178,6 @@ func (a *auth) VerifyEmail(ctx context.Context, id, code string, resend bool) (*
 		}
 		return user, nil
 	}
-
 	c, err := a.RDBS.Get(id)
 	if err != nil {
 		return nil, errors.New("error: Expired Code")
@@ -236,7 +236,7 @@ func (a *auth) sendCode(user *model.User, code string) error {
 
 	body, err := utils.ParseTemplate("signup", data)
 	if err != nil {
-		return  err
+		return err
 	}
 
 	mail := mail.Mailer{

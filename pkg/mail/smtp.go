@@ -132,11 +132,6 @@ func (m *Mailer) send(msg string) error {
 		return err
 	}
 
-	// _, _, err = m.Text.ReadResponse(250)
-	// if err != nil {
-	// 	return err
-	// }
-
 	return nil
 }
 
@@ -257,6 +252,24 @@ func (m *Mailer) setHeaders() []string {
 // 	m.Body = "<html><body><h1>Hi There</h1><p>this is sample email (with attachment) sent via golang program</p></body></html>"
 // 	err = m.SendMail()
 // 	if err != nil {
+// 		log.Println(err)
+// 	}
+// }
+
+// func init() {
+// 	m := gomail.NewMessage()
+// 	m.SetHeader("From", "Adullam <admin@adullam.ng>")
+// 	m.SetHeader("To", "onosbrown.saved@gmail.com")
+// 	m.SetAddressHeader("Cc", "onosbrown.saved@gmail.com", "Dan")
+// 	m.SetHeader("Subject", "Hello!")
+// 	m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
+// 	// m.Attach("/home/Alex/lolcat.jpg")
+
+// 	d := gomail.NewDialer("smtppro.zoho.com", 465, "admin@adullam.ng", "#1414Bruno#")
+
+// 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+// 	// Send the email to Bob, Cora and Dan.
+// 	if err := d.DialAndSend(m); err != nil {
 // 		log.Println(err)
 // 	}
 // }
