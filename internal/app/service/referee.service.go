@@ -74,8 +74,8 @@ func (r *referee) CreateReferee(ctx context.Context, input model.NewReferee) (*m
 
 	buffer := make([]byte, size)
 	file.Read(buffer)
-	msg.Attachment = buffer
-	msg.Filename = fileInfo.Name()
+	// msg.Attachment = buffer
+	// msg.Filename = fileInfo.Name()
 
 	err = r.Mail.Send(msg)
 	if err != nil {
