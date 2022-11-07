@@ -22,6 +22,7 @@ type fileService interface {
 	UpdateFile(ctx context.Context, data interface{}) (*model.File, error)
 	GetFiles(ctx context.Context, userId string) ([]*model.File, error)
 	GetFileByID(ctx context.Context, id string) (*model.File, error)
+	DownloadFile(c *gin.Context) error
 }
 
 type file struct {
@@ -112,7 +113,7 @@ func (f *file) UpdateFile(ctx context.Context, data interface{}) (*model.File, e
 func (f *file) GetFiles(ctx context.Context, userId string) ([]*model.File, error) {
 	file := new(model.File)
 	files := []model.File{}
-	
+
 	file.UserID = userId
 	err := f.DB.FetchByUserID(&files, file)
 	if err != nil {
@@ -138,11 +139,21 @@ func (f *file) GetFileByID(ctx context.Context, id string) (*model.File, error) 
 	return file, nil
 }
 
-func (f *file) DownloadFile(ctx context.Context) error {
-	c := ctx.Value(apiCtx("apiCtx")).(*gin.Context)
+func (f *file) DownloadFile(c *gin.Context) error {
+	// c := ctx.Value(apiCtx("apiCtx")).(*gin.Context)
+	file := model.File{ID: c.Query("id")}
+	err := f.DB.FetchByID(&file)
+	if err != nil {
+		return err
+	}
 
-	filename := c.Param("filename")
-	buffer, err := os.ReadFile(filename)
+	user := model.User{ID: file.UserID}
+	err = f.DB.FetchByID(&user)
+	if err != nil {
+		return err
+	}
+
+	buffer, err := os.ReadFile(file.Path)
 	if err != nil {
 		return err
 	}
@@ -155,7 +166,7 @@ func (f *file) DownloadFile(ctx context.Context) error {
 
 	// Generate the server headers
 	c.Request.Header.Set("Content-Type", mime)
-	c.Request.Header.Set("Content-Disposition", "attachment; filename="+filename+"")
+	c.Request.Header.Set("Content-Disposition", "attachment; filename="+user.FullName+file.Category+"")
 	c.Request.Header.Set("Expires", "0")
 	c.Request.Header.Set("Content-Transfer-Encoding", "binary")
 	c.Request.Header.Set("Content-Length", strconv.Itoa(fileSize))
